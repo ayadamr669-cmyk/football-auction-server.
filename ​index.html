@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة مزاد كرة القدم</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #0f172a; color: white; text-align: center; padding: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; max-width: 350px; margin: 20px auto; }
+        .timer { font-size: 32px; color: #ef4444; font-weight: bold; }
+        .price { font-size: 24px; color: #10b981; margin: 10px 0; }
+        button { background-color: #2563eb; color: white; border: none; padding: 12px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        input { width: 90%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #334155; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h2>🏟️ لعبة مزاد كرة القدم</h2>
+
+    <div id="join-section" class="card">
+        <h3>انضمام للغرفة</h3>
+        <input type="text" id="playerName" placeholder="أدخل اسمك">
+        <input type="text" id="roomId" placeholder="رمز الغرفة (مثال: 123456)">
+        <button onclick="joinRoom()">دخول</button>
+    </div>
+
+    <div id="auction-section" class="card" style="display:none;">
+        <h3 id="player-name">في انتظار بدء المزاد...</h3>
+        <div class="timer" id="timer">25</div>
+        <p>أعلى مزايدة حالية:</p>
+        <div class="price" id="current-bid">0 $</div>
+        <p id="highest-bidder">لا يوجد مزايد</p>
+        <hr style="border-color: #334155;">
+        <p>الميزانية: <b id="my-budget" style="color: #f59e0b;">300,000,000 $</b></p>
+        <input type="number" id="bidAmount" placeholder="مبلغ المزايدة">
+        <button onclick="placeBid()">زايد الآن</button>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+        let currentRoom = '', myName = '';
+
+        function joinRoom() {
+            myName = document.getElementById('playerName').value;
+            currentRoom = document.getElementById('roomId').value;
+            if (myName && currentRoom) {
+                socket.emit('joinRoom', { roomId: currentRoom, playerName: myName });
+                document.getElementById('join-section').style.display = 'none';
+                document.getElementById('auction-section').style.display = 'block';
+            }
+        }
+
+        function placeBid() {
+            const amount = parseInt(document.getElementById('bidAmount').value);
+            if (amount) {
+                socket.emit('placeBid', { roomId: currentRoom, bidAmount: amount, playerName: myName });
+            }
+        }
+
+        socket.on('timerUpdate', (timeLeft) => { document.getElementById('timer').innerText = timeLeft; });
+        socket.on('newHighestBid', (data) => {
+            document.getElementById('current-bid').innerText = data.highestBid.toLocaleString() + ' $';
+            document.getElementById('highest-bidder').innerText = 'أعلى مزايد: ' + data.highestBidder;
+        });
+    </script>
+</body>
+</html>
