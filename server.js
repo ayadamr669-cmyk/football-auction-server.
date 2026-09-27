@@ -101,6 +101,8 @@ function startNextPlayerAuction(roomId) {
     }, 1000);
 }
 
-server.listen(3000, () => {
-    console.log('سيرفر المزاد يعمل بنجاح على المنفذ 3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`سيرفر المزاد يعمل بنجاح على المنفذ ${PORT}`);
 });
+
